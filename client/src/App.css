@@ -754,6 +754,91 @@ nav#bottom-nav button.active .dot { background: var(--primary); }
   font-weight: 500;
 }
 
+/* ── Reconnect banner ──────────────────────────────────────────────────────── */
+.reconnect-banner {
+  background: #FEF3C7;
+  border: 1px solid #F59E0B;
+  color: #92400E;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+/* ── Tablet layout (≥ 900px) ───────────────────────────────────────────────── */
+@media (min-width: 900px) {
+  :root { --cart-w: 340px; --nav-h: 64px; }
+
+  body { padding-bottom: var(--nav-h); }
+
+  /* Main content shifts left of the cart sidebar */
+  #app {
+    max-width: calc(100% - var(--cart-w));
+    margin: 0;
+    padding: 0 28px;
+  }
+
+  /* Cart becomes a permanent right sidebar */
+  .cart-bar {
+    left: auto;
+    right: 0;
+    top: 0;
+    bottom: var(--nav-h);
+    width: var(--cart-w);
+    border-top: none;
+    border-left: 1px solid var(--border);
+    box-shadow: -4px 0 20px rgba(0,0,0,.06);
+    display: flex !important;
+    flex-direction: column;
+  }
+
+  /* Always-visible cart items on tablet */
+  .cart-bar .cart-items {
+    flex: 1;
+    max-height: none !important;
+    overflow-y: auto !important;
+    padding: 14px 18px 6px !important;
+  }
+
+  /* Cart summary becomes the sidebar header */
+  .cart-bar .cart-summary {
+    border-bottom: 1px solid var(--border);
+    cursor: default;
+  }
+
+  /* Kasse view: no large bottom padding needed */
+  #view-kasse { padding-bottom: 24px; }
+
+  /* Larger product cards on tablet */
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+  }
+  .product-card { min-height: 96px; }
+  .product-card .pname { font-size: 15px; }
+  .product-card .pprice { font-size: 14px; }
+
+  /* Larger touch targets in nav */
+  nav#bottom-nav {
+    max-width: none;
+  }
+  nav#bottom-nav button {
+    font-size: 12px;
+    padding: 12px 4px 14px;
+    gap: 5px;
+  }
+  nav#bottom-nav button .dot { width: 5px; height: 5px; }
+
+  /* Bedienung tokens bigger */
+  .token { padding: 10px 14px; }
+  .circle { width: 36px; height: 36px; font-size: 15px; }
+
+  /* Category chips bigger */
+  .cat-chip { padding: 7px 16px; font-size: 13px; }
+}
+
 /* ── Print / PDF ───────────────────────────────────────────────────────────── */
 .print-header { display: none; }
 
