@@ -80,9 +80,10 @@ app.patch('/api/transactions/:id/void', (req, res) => {
 app.put('/api/settlements/:bIndex', (req, res) => {
   try {
     const event = db.getActiveEvent();
-    db.saveSettlement(event.id, Number(req.params.bIndex), req.body);
+    const saved = db.saveSettlement(event.id, Number(req.params.bIndex), req.body);
+    console.log('[settlements PUT] confirmed in DB:', JSON.stringify(saved));
     broadcast(db.getFullState());
-    res.json({ ok: true });
+    res.json({ ok: true, saved });
   } catch (e) {
     console.error('[settlements PUT] error:', e.message);
     res.status(500).json({ error: e.message });

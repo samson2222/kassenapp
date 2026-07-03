@@ -466,6 +466,46 @@ input.ist-input:focus { outline: none; border-color: var(--primary); background:
   letter-spacing: -.02em;
 }
 
+/* ── Abrechnung breakdown ──────────────────────────────────────────────────── */
+.ar-breakdown {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  font-size: 13.5px;
+}
+.ar-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.ar-breakdown-row span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text); }
+.ar-breakdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+.ar-verdienst { color: var(--green) !important; font-weight: 700 !important; }
+.ar-breakdown-abzugeben {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  margin-top: 4px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: rgba(255,255,255,.85);
+  font-weight: 600;
+  font-size: 14px;
+}
+.ar-breakdown-abzugeben span:last-child {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Einstellungen ─────────────────────────────────────────────────────────── */
 .field-row { margin-bottom: 14px; }
 .field-row label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }

@@ -80,7 +80,7 @@ export const useStore = create((set, get) => ({
   },
 
   async saveSettlement(bedienungIndex, updates) {
-    await api.put(`/api/settlements/${bedienungIndex}`, updates);
+    return api.put(`/api/settlements/${bedienungIndex}`, updates);
   },
 
   async updateConfig(config) {

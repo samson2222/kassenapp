@@ -15,8 +15,6 @@ const NAV = [
   { key: 'abrechnung',    label: 'Abrechnung' },
   { key: 'einstellungen', label: 'Einstellungen' },
 ];
-const ADMIN_VIEWS = ['abrechnung', 'einstellungen'];
-
 function fmtTime(ts) {
   return new Date(ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 }
@@ -66,8 +64,7 @@ export default function App() {
     };
   }, []);
 
-  const needsAuth     = ADMIN_VIEWS.includes(activeView) && !adminUnlocked;
-  const showCartBar   = activeView === 'kasse' && !!event;
+  const showCartBar = activeView === 'kasse' && !!event;
   const disconnected  = everConnected && !connected;
 
   return (
@@ -100,15 +97,19 @@ export default function App() {
         <main>
           {!event ? (
             <div className="empty-hint" style={{ paddingTop: '60px' }}>Lädt…</div>
-          ) : needsAuth ? (
-            <AdminGate />
           ) : (
             <>
-              {activeView === 'kasse'         && <Kasse />}
-              {activeView === 'verlauf'       && <Verlauf />}
-              {activeView === 'bedienungen'   && <Bedienungen />}
-              {activeView === 'abrechnung'    && <Abrechnung />}
-              {activeView === 'einstellungen' && <Einstellungen />}
+              {/* Views stay mounted so local state survives tab switches.
+                  CSS display:none hides inactive views instead of unmounting. */}
+              <div style={{ display: activeView === 'kasse'       ? 'block' : 'none' }}><Kasse /></div>
+              <div style={{ display: activeView === 'verlauf'     ? 'block' : 'none' }}><Verlauf /></div>
+              <div style={{ display: activeView === 'bedienungen' ? 'block' : 'none' }}><Bedienungen /></div>
+              <div style={{ display: activeView === 'abrechnung'  ? 'block' : 'none' }}>
+                {adminUnlocked ? <Abrechnung /> : (activeView === 'abrechnung' ? <AdminGate /> : null)}
+              </div>
+              <div style={{ display: activeView === 'einstellungen' ? 'block' : 'none' }}>
+                {adminUnlocked ? <Einstellungen /> : (activeView === 'einstellungen' ? <AdminGate /> : null)}
+              </div>
             </>
           )}
         </main>

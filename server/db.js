@@ -37,6 +37,7 @@ db.exec(`
     event_id         INTEGER NOT NULL REFERENCES events(id),
     bedienung_index  INTEGER NOT NULL,
     ist              REAL,
+    startgeld        REAL,
     closed           INTEGER NOT NULL DEFAULT 0,
     closed_at        INTEGER,
     PRIMARY KEY (event_id, bedienung_index)
@@ -159,6 +160,8 @@ function saveSettlement(eventId, bedienungIndex, updates) {
   const closed    = updates.closed    !== undefined ? !!updates.closed  : !!(existing?.closed);
   const closedAt  = closed ? (existing?.closed_at || Date.now()) : null;
 
+  console.log(`[saveSettlement] bIndex=${bedienungIndex} ist=${ist} startgeld=${startgeld} closed=${closed}`);
+
   db.prepare(`
     INSERT INTO settlements (event_id, bedienung_index, ist, startgeld, closed, closed_at)
     VALUES (?, ?, ?, ?, ?, ?)
@@ -168,6 +171,11 @@ function saveSettlement(eventId, bedienungIndex, updates) {
       closed    = excluded.closed,
       closed_at = excluded.closed_at
   `).run(eventId, bedienungIndex, ist, startgeld, closed ? 1 : 0, closedAt);
+
+  // Return what was actually written to the DB
+  return db.prepare(
+    'SELECT * FROM settlements WHERE event_id = ? AND bedienung_index = ?'
+  ).get(eventId, bedienungIndex);
 }
 
 function updateConfig(config) {
