@@ -99,6 +99,10 @@ export default function Einstellungen() {
     setProducts([...products, { id: uid(), name: 'Neues Produkt', price: 0, category: 'Sonstiges' }]);
   }
 
+  function addSeparator() {
+    setProducts([...products, { id: uid(), type: 'separator', name: '' }]);
+  }
+
   function removeProduct(i) {
     setProducts(products.filter((_, idx) => idx !== i));
   }
@@ -169,7 +173,24 @@ export default function Einstellungen() {
         </button>
       </div>
       <div id="prod-list">
-        {products.map((p, i) => (
+        {products.map((p, i) => p.type === 'separator' ? (
+          <div key={p.id} className="prod-card prod-separator-card">
+            <div className="prod-card-row1">
+              <div className="prod-order-btns">
+                <button onClick={() => moveProduct(i, -1)} disabled={i === 0}>↑</button>
+                <button onClick={() => moveProduct(i,  1)} disabled={i === products.length - 1}>↓</button>
+              </div>
+              <span className="separator-badge">── Trennstrich ──</span>
+              <input
+                type="text"
+                value={p.name || ''}
+                placeholder="Beschriftung (optional)"
+                onChange={e => setProductField(i, 'name', e.target.value)}
+              />
+              <button className="icon-btn" onClick={() => removeProduct(i)}>✕</button>
+            </div>
+          </div>
+        ) : (
           <div key={p.id} className="prod-card">
             <div className="prod-card-row1">
               <div className="prod-order-btns">
@@ -219,9 +240,10 @@ export default function Einstellungen() {
           </div>
         ))}
       </div>
-      <button className="btn btn-ghost btn-full" onClick={addProduct} style={{ marginTop: '8px' }}>
-        + Produkt hinzufügen
-      </button>
+      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+        <button className="btn btn-ghost btn-full" onClick={addProduct}>+ Produkt hinzufügen</button>
+        <button className="btn btn-ghost btn-full" onClick={addSeparator}>+ Trennstrich</button>
+      </div>
 
       {/* ── Speichern ── */}
       <button

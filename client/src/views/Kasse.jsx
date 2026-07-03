@@ -23,8 +23,10 @@ export default function Kasse() {
   const cfg = event?.config || {};
   const names = (cfg.bedienungenNames || []).slice(0, cfg.bedienungenCount || 0);
   const products = cfg.products || [];
-  const categories = ['Alle', ...new Set(products.map(p => p.category))];
-  const visible = activeCategory === 'Alle' ? products : products.filter(p => p.category === activeCategory);
+  const categories = ['Alle', ...new Set(products.filter(p => p.type !== 'separator').map(p => p.category))];
+  const visible = activeCategory === 'Alle'
+    ? products
+    : products.filter(p => p.type !== 'separator' && p.category === activeCategory);
   const recent = [...transactions].reverse().slice(0, 10);
 
   async function handleVoid(id) {
@@ -58,6 +60,13 @@ export default function Kasse() {
       {/* Product grid */}
       <div className="product-grid">
         {visible.map(p => {
+          if (p.type === 'separator') {
+            return (
+              <div key={p.id} className="product-separator">
+                {p.name && <span>{p.name}</span>}
+              </div>
+            );
+          }
           const qty = cart[p.id] || 0;
           const colorDef = PRODUCT_COLORS.find(c => c.id === (p.color || 'none'));
           const cardStyle = colorDef?.border

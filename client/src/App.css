@@ -186,6 +186,26 @@ header.top .title-block p { margin: 1px 0 0; font-size: 12px; color: var(--text-
 }
 .product-card .pname  { font-size: 14px; font-weight: 600; line-height: 1.3; color: var(--text); }
 .product-card .pprice { font-size: 13px; font-weight: 700; color: var(--accent); margin-top: 8px; font-variant-numeric: tabular-nums; }
+.product-separator {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0 2px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.product-separator::before,
+.product-separator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.product-separator span { white-space: nowrap; }
 .qty-badge {
   position: absolute;
   top: -9px;
@@ -449,6 +469,23 @@ input.ist-input:focus { outline: none; border-color: var(--primary); background:
   padding: 12px 12px 10px;
   margin-bottom: 8px;
   box-shadow: var(--shadow-xs);
+}
+.prod-separator-card {
+  background: var(--bg);
+  border-style: dashed;
+  padding-bottom: 12px;
+}
+.prod-separator-card .prod-card-row1 { margin-bottom: 0; }
+.separator-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .prod-card-row1 {
   display: flex;
