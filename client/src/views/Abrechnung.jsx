@@ -10,20 +10,22 @@ function soll(transactions, bIndex) {
 
 export default function Abrechnung() {
   const { event, transactions, settlements, saveSettlement } = useStore();
-  const [istValues, setIstValues]           = useState({});
+  const [istValues, setIstValues]             = useState({});
   const [startgeldValues, setStartgeldValues] = useState({});
-  const istRefs       = useRef({});
-  const startgeldRefs = useRef({});
+  // dirty flags: true while user is editing, prevents SSE from overwriting local input
+  const istDirty       = useRef({});
+  const startgeldDirty = useRef({});
 
   const cfg        = event?.config || {};
   const names      = (cfg.bedienungenNames || []).slice(0, cfg.bedienungenCount || 0);
   const provisions = cfg.bedienungenProvision || [];
 
+  // Sync from server – only update fields the user is NOT currently editing
   useEffect(() => {
     setIstValues(prev => {
       const next = { ...prev };
       names.forEach((_, i) => {
-        if (document.activeElement === istRefs.current[i]) return;
+        if (istDirty.current[i]) return;
         const s = settlements[i];
         next[i] = s?.ist != null ? String(s.ist) : '';
       });
@@ -32,7 +34,7 @@ export default function Abrechnung() {
     setStartgeldValues(prev => {
       const next = { ...prev };
       names.forEach((_, i) => {
-        if (document.activeElement === startgeldRefs.current[i]) return;
+        if (startgeldDirty.current[i]) return;
         const s = settlements[i];
         next[i] = s?.startgeld != null ? String(s.startgeld) : '';
       });
@@ -55,13 +57,15 @@ export default function Abrechnung() {
   const totalAuszahlung = totalNetto - totalProvision;
 
   async function handleIstBlur(i) {
-    const val = istValues[i];
+    const val = istValues[i] ?? '';
     await saveSettlement(i, { ist: val === '' ? null : Number(val) });
+    istDirty.current[i] = false;
   }
 
   async function handleStartgeldBlur(i) {
-    const val = startgeldValues[i];
+    const val = startgeldValues[i] ?? '';
     await saveSettlement(i, { startgeld: val === '' ? null : Number(val) });
+    startgeldDirty.current[i] = false;
   }
 
   async function handleClose(i, closed) {
@@ -150,7 +154,6 @@ export default function Abrechnung() {
               <div className="ar-field">
                 <label>Startgeld (€)</label>
                 <input
-                  ref={el => { startgeldRefs.current[i] = el; }}
                   type="number"
                   inputMode="decimal"
                   step="0.01"
@@ -158,14 +161,16 @@ export default function Abrechnung() {
                   value={startgeldValues[i] ?? ''}
                   placeholder="0,00"
                   disabled={settlement.closed}
-                  onChange={e => setStartgeldValues(v => ({ ...v, [i]: e.target.value }))}
+                  onChange={e => {
+                    startgeldDirty.current[i] = true;
+                    setStartgeldValues(v => ({ ...v, [i]: e.target.value }));
+                  }}
                   onBlur={() => handleStartgeldBlur(i)}
                 />
               </div>
               <div className="ar-field">
                 <label>Ist (gezähltes Bargeld)</label>
                 <input
-                  ref={el => { istRefs.current[i] = el; }}
                   type="number"
                   inputMode="decimal"
                   step="0.01"
@@ -173,7 +178,10 @@ export default function Abrechnung() {
                   value={istValues[i] ?? ''}
                   placeholder="0,00"
                   disabled={settlement.closed}
-                  onChange={e => setIstValues(v => ({ ...v, [i]: e.target.value }))}
+                  onChange={e => {
+                    istDirty.current[i] = true;
+                    setIstValues(v => ({ ...v, [i]: e.target.value }));
+                  }}
                   onBlur={() => handleIstBlur(i)}
                 />
               </div>
