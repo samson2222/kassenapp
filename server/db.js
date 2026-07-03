@@ -12,6 +12,8 @@ const db = new DatabaseSync(DB_PATH);
 // Better concurrent-write performance
 db.exec('PRAGMA journal_mode = WAL');
 db.exec('PRAGMA foreign_keys = ON');
+// Schema migration: add startgeld column if not present
+try { db.exec('ALTER TABLE settlements ADD COLUMN startgeld REAL'); } catch {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS events (
@@ -107,7 +109,7 @@ function parseTx(t) {
 function parseSettlements(rows) {
   const result = {};
   for (const r of rows) {
-    result[r.bedienung_index] = { ist: r.ist, closed: r.closed === 1, closedAt: r.closed_at };
+    result[r.bedienung_index] = { ist: r.ist, startgeld: r.startgeld, closed: r.closed === 1, closedAt: r.closed_at };
   }
   return result;
 }
@@ -152,18 +154,20 @@ function saveSettlement(eventId, bedienungIndex, updates) {
     'SELECT * FROM settlements WHERE event_id = ? AND bedienung_index = ?'
   ).get(eventId, bedienungIndex);
 
-  const ist    = updates.ist    !== undefined ? updates.ist    : (existing?.ist    ?? null);
-  const closed = updates.closed !== undefined ? !!updates.closed : !!(existing?.closed);
-  const closedAt = closed ? (existing?.closed_at || Date.now()) : null;
+  const ist       = updates.ist       !== undefined ? updates.ist       : (existing?.ist       ?? null);
+  const startgeld = updates.startgeld !== undefined ? updates.startgeld : (existing?.startgeld ?? null);
+  const closed    = updates.closed    !== undefined ? !!updates.closed  : !!(existing?.closed);
+  const closedAt  = closed ? (existing?.closed_at || Date.now()) : null;
 
   db.prepare(`
-    INSERT INTO settlements (event_id, bedienung_index, ist, closed, closed_at)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO settlements (event_id, bedienung_index, ist, startgeld, closed, closed_at)
+    VALUES (?, ?, ?, ?, ?, ?)
     ON CONFLICT (event_id, bedienung_index) DO UPDATE SET
       ist       = excluded.ist,
+      startgeld = excluded.startgeld,
       closed    = excluded.closed,
       closed_at = excluded.closed_at
-  `).run(eventId, bedienungIndex, ist, closed ? 1 : 0, closedAt);
+  `).run(eventId, bedienungIndex, ist, startgeld, closed ? 1 : 0, closedAt);
 }
 
 function updateConfig(config) {

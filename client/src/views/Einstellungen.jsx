@@ -32,11 +32,12 @@ export default function Einstellungen() {
 
   const DEFAULT_CATS = ['Getränke', 'Speisen', 'Sonstiges'];
 
-  const [eventName, setEventName] = useState(cfg.eventName || event?.name || '');
-  const [count, setCount]         = useState(cfg.bedienungenCount || 4);
-  const [names, setNames]         = useState(cfg.bedienungenNames || []);
-  const [products, setProducts]   = useState(cfg.products || []);
-  const [saveState, setSaveState] = useState('idle'); // 'idle' | 'saving' | 'saved'
+  const [eventName, setEventName]   = useState(cfg.eventName || event?.name || '');
+  const [count, setCount]           = useState(cfg.bedienungenCount || 4);
+  const [names, setNames]           = useState(cfg.bedienungenNames || []);
+  const [provisions, setProvisions] = useState(cfg.bedienungenProvision || []);
+  const [products, setProducts]     = useState(cfg.products || []);
+  const [saveState, setSaveState]   = useState('idle'); // 'idle' | 'saving' | 'saved'
 
   // Categories: defaults + any custom ones already used in products
   const [categories, setCategories] = useState(
@@ -54,6 +55,7 @@ export default function Einstellungen() {
     setEventName(cfg.eventName || event?.name || '');
     setCount(cfg.bedienungenCount || 4);
     setNames(cfg.bedienungenNames || []);
+    setProvisions(cfg.bedienungenProvision || []);
     setProducts(p);
     setCategories(prev => [...new Set([...DEFAULT_CATS, ...prev, ...p.map(pp => pp.category).filter(Boolean)])]);
   }, [event?.id]);
@@ -72,10 +74,16 @@ export default function Einstellungen() {
     setSelectedEvent(data);
   }
 
+  function setProvisionAt(i, val) {
+    const p = [...provisions];
+    p[i] = val;
+    setProvisions(p);
+  }
+
   async function handleSave() {
     setSaveState('saving');
     try {
-      await updateConfig({ eventName, bedienungenCount: count, bedienungenNames: names, products });
+      await updateConfig({ eventName, bedienungenCount: count, bedienungenNames: names, bedienungenProvision: provisions, products });
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 2000);
     } catch {
@@ -156,13 +164,26 @@ export default function Einstellungen() {
       </div>
       <div className="name-inputs">
         {Array.from({ length: count }, (_, i) => (
-          <input
-            key={i}
-            type="text"
-            value={names[i] || ''}
-            placeholder={`Name Bedienung ${i + 1}`}
-            onChange={e => setNameAt(i, e.target.value)}
-          />
+          <div key={i} className="bedienung-cfg-row">
+            <input
+              type="text"
+              value={names[i] || ''}
+              placeholder={`Name Bedienung ${i + 1}`}
+              onChange={e => setNameAt(i, e.target.value)}
+            />
+            <div className="provision-field">
+              <span>Provision</span>
+              <input
+                type="number"
+                value={provisions[i] ?? 10}
+                min="0"
+                max="100"
+                step="0.5"
+                onChange={e => setProvisionAt(i, Number(e.target.value) || 0)}
+              />
+              <span>%</span>
+            </div>
+          </div>
         ))}
       </div>
 
