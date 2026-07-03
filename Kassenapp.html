@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<!-- saved from url=(0052)file:///Users/christianboes/Downloads/kassenapp.html -->
+<html lang="de"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kassenapp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./Kassenapp_files/css2" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1C1815;
+    --panel:#252019;
+    --panel-raised:#2F2820;
+    --panel-hover:#39301F;
+    --text:#F4EEDD;
+    --text-muted:#B3A98E;
+    --text-faint:#7A7161;
+    --gold:#D9A93B;
+    --gold-dim:#8A6C25;
+    --green:#6FA05E;
+    --green-bg:#25301F;
+    --red:#D9614F;
+    --red-bg:#33201B;
+    --blue:#6FA0C4;
+    --blue-bg:#1F2A33;
+    --border:#41392C;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    padding-bottom:78px;
+  }
+  h1,h2,h3,.display{font-family:'Oswald',sans-serif;letter-spacing:0.02em;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select{font-family:inherit;}
+  #app{max-width:720px;margin:0 auto;padding:0 14px;}
+
+  header.top{
+    padding:20px 4px 14px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:16px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:10px;
+  }
+  header.top .title-block h1{
+    font-size:22px;font-weight:700;margin:0;color:var(--gold);text-transform:uppercase;
+  }
+  header.top .title-block p{margin:2px 0 0;font-size:12.5px;color:var(--text-muted);}
+  .sync-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-faint);white-space:nowrap;}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+  .sync-dot.syncing{background:var(--gold);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* Bedienung token selector */
+  .bedienung-row{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 14px;margin-bottom:4px;}
+  .token{
+    flex-shrink:0;width:66px;text-align:center;background:none;border:none;color:var(--text);
+    display:flex;flex-direction:column;align-items:center;gap:6px;padding:0;
+  }
+  .token .circle{
+    width:56px;height:56px;border-radius:50%;background:var(--panel-raised);border:2px solid var(--border);
+    display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:19px;font-weight:600;
+    transition:border-color .15s, background .15s;
+  }
+  .token.active .circle{border-color:var(--gold);background:var(--gold-dim);color:var(--text);}
+  .token .name{font-size:11px;color:var(--text-muted);max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .token.active .name{color:var(--gold);}
+  .token .sub{font-size:10.5px;color:var(--text-faint);font-variant-numeric:tabular-nums;}
+
+  .cat-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;}
+  .cat-chip{
+    flex-shrink:0;padding:7px 14px;border-radius:99px;border:1px solid var(--border);background:var(--panel);
+    color:var(--text-muted);font-size:13px;font-weight:500;
+  }
+  .cat-chip.active{background:var(--gold);border-color:var(--gold);color:#241C08;}
+
+  .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;padding-bottom:150px;}
+  .product-card{
+    position:relative;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 12px;text-align:left;color:var(--text);min-height:84px;display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .product-card:active{background:var(--panel-hover);}
+  .product-card .pname{font-size:14.5px;font-weight:500;line-height:1.25;}
+  .product-card .pprice{font-size:13px;color:var(--gold);margin-top:8px;font-variant-numeric:tabular-nums;}
+  .qty-badge{
+    position:absolute;top:-8px;right:-8px;background:var(--gold);color:#241C08;min-width:24px;height:24px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;padding:0 4px;
+  }
+
+  .cart-bar{
+    position:fixed;left:0;right:0;bottom:64px;max-width:720px;margin:0 auto;background:var(--panel-raised);
+    border-top:1px solid var(--border);box-shadow:0 -4px 18px rgba(0,0,0,0.35);
+  }
+  .cart-summary{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;gap:12px;}
+  .cart-summary .info{font-size:13px;color:var(--text-muted);}
+  .cart-summary .total{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;color:var(--gold);}
+  .cart-actions{display:flex;gap:8px;padding:0 16px 14px;}
+  .btn{
+    border-radius:var(--radius);border:1px solid var(--border);background:var(--panel);color:var(--text);
+    padding:12px 16px;font-size:14px;font-weight:600;
+  }
+  .btn-primary{background:var(--gold);border-color:var(--gold);color:#241C08;flex:1;}
+  .btn-ghost{background:none;border:1px solid var(--border);color:var(--text-muted);}
+  .btn-full{width:100%;}
+  .btn-danger-outline{border-color:var(--red);color:var(--red);background:none;}
+  .btn:disabled{opacity:0.4;}
+
+  .cart-items{max-height:0;overflow:hidden;transition:max-height .2s ease;padding:0 16px;}
+  .cart-items.open{max-height:220px;overflow-y:auto;padding:0 16px 10px;}
+  .cart-line{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border);}
+  .cart-line .lname{color:var(--text);}
+  .cart-line .lmeta{color:var(--text-faint);}
+
+  section.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+  .section-title{font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-faint);margin:22px 0 10px;}
+  .section-title:first-child{margin-top:0;}
+
+  .recent-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;gap:8px;}
+  .recent-item:last-child{border-bottom:none;}
+  .recent-item .rmeta{color:var(--text-muted);}
+  .recent-item .ramount{font-variant-numeric:tabular-nums;font-weight:600;}
+  .recent-item.void .ramount, .recent-item.void .rmeta{text-decoration:line-through;opacity:0.5;}
+  .link-btn{background:none;border:none;color:var(--red);font-size:12px;font-weight:600;padding:4px;}
+
+  /* Bedienungen readonly view */
+  .bedienungen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+  .b-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;}
+  .b-card .bnum{font-family:'Oswald',sans-serif;font-size:15px;color:var(--gold);font-weight:600;}
+  .b-card .bname{font-size:13px;color:var(--text-muted);margin-top:2px;}
+  .b-card .btotal{font-family:'Oswald',sans-serif;font-size:26px;margin-top:12px;font-weight:600;font-variant-numeric:tabular-nums;}
+  .b-card .bcount{font-size:12px;color:var(--text-faint);margin-top:2px;}
+
+  /* Abrechnung */
+  .abrechnung-row{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+  .abrechnung-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .abrechnung-head .aname{font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;}
+  .status-pill{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:600;}
+  .status-pill.offen{background:var(--panel-raised);color:var(--text-muted);}
+  .status-pill.zu{background:var(--green-bg);color:var(--green);}
+  .ar-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .ar-field label{display:block;font-size:11px;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;}
+  .ar-field .val{font-size:17px;font-variant-numeric:tabular-nums;font-weight:600;}
+  input.ist-input{
+    width:100%;background:var(--panel-raised);border:1px solid var(--border);border-radius:8px;color:var(--text);
+    padding:9px 10px;font-size:17px;font-variant-numeric:tabular-nums;font-weight:600;
+  }
+  input.ist-input:focus{outline:none;border-color:var(--gold);}
+  .diff-line{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding-top:8px;border-top:1px solid var(--border);}
+  .diff-val{font-weight:700;font-variant-numeric:tabular-nums;}
+  .diff-val.match{color:var(--green);}
+  .diff-val.minus{color:var(--red);}
+  .diff-val.plus{color:var(--blue);}
+
+  .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0;}
+  .metric{background:var(--panel-raised);border-radius:10px;padding:12px;text-align:center;}
+  .metric .mlabel{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.05em;}
+  .metric .mval{font-family:'Oswald',sans-serif;font-size:19px;margin-top:5px;font-variant-numeric:tabular-nums;}
+
+  /* Einstellungen */
+  .field-row{margin-bottom:14px;}
+  .field-row label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;}
+  .field-row input, .field-row select{
+    width:100%;background:var(--panel-raised);border:1px solid var(--border);border-radius:8px;color:var(--text);
+    padding:10px 11px;font-size:14px;
+  }
+  .field-row input:focus, .field-row select:focus{outline:none;border-color:var(--gold);}
+  .stepper{display:flex;align-items:center;gap:14px;}
+  .stepper button{width:38px;height:38px;border-radius:50%;background:var(--panel-raised);border:1px solid var(--border);color:var(--text);font-size:18px;}
+  .stepper .num{font-family:'Oswald',sans-serif;font-size:20px;min-width:24px;text-align:center;}
+  .name-inputs{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .prod-row{display:grid;grid-template-columns:1fr 80px 1fr 34px;gap:6px;align-items:center;margin-bottom:8px;}
+  .prod-row input{padding:8px 9px;font-size:13px;}
+  .icon-btn{width:34px;height:34px;border-radius:8px;background:var(--panel-raised);border:1px solid var(--border);color:var(--red);font-size:16px;display:flex;align-items:center;justify-content:center;}
+  .danger-zone{border:1px solid var(--red);border-radius:12px;padding:14px 16px;margin-top:24px;}
+  .danger-zone p{font-size:12.5px;color:var(--text-muted);margin:4px 0 12px;}
+
+  nav#bottom-nav{
+    position:fixed;bottom:0;left:0;right:0;background:var(--panel-raised);border-top:1px solid var(--border);
+    display:flex;max-width:720px;margin:0 auto;z-index:20;
+  }
+  nav#bottom-nav button{
+    flex:1;background:none;border:none;color:var(--text-faint);font-size:11px;padding:10px 4px 9px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:500;
+  }
+  nav#bottom-nav button .dot{width:5px;height:5px;border-radius:50%;background:transparent;}
+  nav#bottom-nav button.active{color:var(--gold);}
+  nav#bottom-nav button.active .dot{background:var(--gold);}
+
+  .empty-hint{color:var(--text-faint);font-size:13px;padding:20px 4px;text-align:center;}
+  ::-webkit-scrollbar{height:0;width:0;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="title-block">
+      <h1 id="event-name">Vereinsfest</h1>
+      <p>Kassenapp</p>
+    </div>
+    <div class="sync-status"><span class="sync-dot" id="sync-dot"></span><span id="sync-text">aktualisiert 23:06</span></div>
+  </header>
+
+  <main>
+    <section id="view-kasse" class="view active"><div class="bedienung-row"><button class="token active" data-b="0">
+      <div class="circle">1</div>
+      <div class="name">Bedienung 1</div>
+      <div class="sub">0,00&nbsp;€</div>
+    </button><button class="token " data-b="1">
+      <div class="circle">2</div>
+      <div class="name">Bedienung 2</div>
+      <div class="sub">0,00&nbsp;€</div>
+    </button><button class="token " data-b="2">
+      <div class="circle">3</div>
+      <div class="name">Bedienung 3</div>
+      <div class="sub">0,00&nbsp;€</div>
+    </button><button class="token " data-b="3">
+      <div class="circle">4</div>
+      <div class="name">Bedienung 4</div>
+      <div class="sub">0,00&nbsp;€</div>
+    </button></div><div class="cat-row"><button class="cat-chip active" data-cat="Alle">Alle</button><button class="cat-chip " data-cat="Getränke">Getränke</button><button class="cat-chip " data-cat="Speisen">Speisen</button><button class="cat-chip " data-cat="Sonstiges">Sonstiges</button></div><div class="product-grid"><button class="product-card" data-add="p1">
+      
+      <span class="pname">Bier 0,5l</span>
+      <span class="pprice">4,00&nbsp;€</span>
+    </button><button class="product-card" data-add="p2">
+      
+      <span class="pname">Radler 0,5l</span>
+      <span class="pprice">4,00&nbsp;€</span>
+    </button><button class="product-card" data-add="p3">
+      
+      <span class="pname">Wasser 0,33l</span>
+      <span class="pprice">2,50&nbsp;€</span>
+    </button><button class="product-card" data-add="p4">
+      
+      <span class="pname">Cola / Fanta</span>
+      <span class="pprice">3,00&nbsp;€</span>
+    </button><button class="product-card" data-add="p5">
+      
+      <span class="pname">Wein 0,2l</span>
+      <span class="pprice">4,50&nbsp;€</span>
+    </button><button class="product-card" data-add="p6">
+      
+      <span class="pname">Bratwurst im Brötchen</span>
+      <span class="pprice">4,50&nbsp;€</span>
+    </button><button class="product-card" data-add="p7">
+      
+      <span class="pname">Steak im Brötchen</span>
+      <span class="pprice">6,00&nbsp;€</span>
+    </button><button class="product-card" data-add="p8">
+      
+      <span class="pname">Pommes</span>
+      <span class="pprice">3,50&nbsp;€</span>
+    </button><button class="product-card" data-add="p9">
+      
+      <span class="pname">Kuchen</span>
+      <span class="pprice">2,50&nbsp;€</span>
+    </button></div><div class="section-title">Letzte Verkäufe</div><div class="empty-hint">Noch keine Verkäufe gebucht.</div></section>
+    <section id="view-bedienungen" class="view"><div class="section-title">Übersicht je Bedienung (nur lesend)</div><div class="bedienungen-grid"><div class="b-card">
+      <div class="bnum">Bedienung 1</div>
+      <div class="bname">Bedienung 1</div>
+      <div class="btotal">0,00&nbsp;€</div>
+      <div class="bcount">0 Verkäufe</div>
+    </div><div class="b-card">
+      <div class="bnum">Bedienung 2</div>
+      <div class="bname">Bedienung 2</div>
+      <div class="btotal">0,00&nbsp;€</div>
+      <div class="bcount">0 Verkäufe</div>
+    </div><div class="b-card">
+      <div class="bnum">Bedienung 3</div>
+      <div class="bname">Bedienung 3</div>
+      <div class="btotal">0,00&nbsp;€</div>
+      <div class="bcount">0 Verkäufe</div>
+    </div><div class="b-card">
+      <div class="bnum">Bedienung 4</div>
+      <div class="bname">Bedienung 4</div>
+      <div class="btotal">0,00&nbsp;€</div>
+      <div class="bcount">0 Verkäufe</div>
+    </div></div></section>
+    <section id="view-abrechnung" class="view">
+    <div class="section-title">Gesamtübersicht</div>
+    <div class="summary-grid">
+      <div class="metric"><div class="mlabel">Soll gesamt</div><div class="mval">0,00&nbsp;€</div></div>
+      <div class="metric"><div class="mlabel">Ist gesamt</div><div class="mval">0,00&nbsp;€</div></div>
+      <div class="metric"><div class="mlabel">Differenz</div><div class="mval" style="color:var(--green)">+0,00&nbsp;€</div></div>
+    </div>
+    <div class="section-title">Je Bedienung</div>
+    <div class="abrechnung-row">
+      <div class="abrechnung-head">
+        <span class="aname">Bedienung 1</span>
+        <span class="status-pill offen">Offen</span>
+      </div>
+      <div class="ar-grid">
+        <div class="ar-field"><label>Soll (App-Umsatz)</label><div class="val">0,00&nbsp;€</div></div>
+        <div class="ar-field"><label>Ist (gezähltes Bargeld)</label>
+          <input type="number" inputmode="decimal" step="0.01" class="ist-input" data-ist="0" value="" placeholder="0,00">
+        </div>
+      </div>
+      <div class="diff-line">
+        <span>Differenz</span>
+        <span class="diff-val" style="color:var(--text-faint)">–</span>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn btn-primary" data-close="0" disabled="">Abschließen</button>
+      </div>
+    </div><div class="abrechnung-row">
+      <div class="abrechnung-head">
+        <span class="aname">Bedienung 2</span>
+        <span class="status-pill offen">Offen</span>
+      </div>
+      <div class="ar-grid">
+        <div class="ar-field"><label>Soll (App-Umsatz)</label><div class="val">0,00&nbsp;€</div></div>
+        <div class="ar-field"><label>Ist (gezähltes Bargeld)</label>
+          <input type="number" inputmode="decimal" step="0.01" class="ist-input" data-ist="1" value="" placeholder="0,00">
+        </div>
+      </div>
+      <div class="diff-line">
+        <span>Differenz</span>
+        <span class="diff-val" style="color:var(--text-faint)">–</span>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn btn-primary" data-close="1" disabled="">Abschließen</button>
+      </div>
+    </div><div class="abrechnung-row">
+      <div class="abrechnung-head">
+        <span class="aname">Bedienung 3</span>
+        <span class="status-pill offen">Offen</span>
+      </div>
+      <div class="ar-grid">
+        <div class="ar-field"><label>Soll (App-Umsatz)</label><div class="val">0,00&nbsp;€</div></div>
+        <div class="ar-field"><label>Ist (gezähltes Bargeld)</label>
+          <input type="number" inputmode="decimal" step="0.01" class="ist-input" data-ist="2" value="" placeholder="0,00">
+        </div>
+      </div>
+      <div class="diff-line">
+        <span>Differenz</span>
+        <span class="diff-val" style="color:var(--text-faint)">–</span>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn btn-primary" data-close="2" disabled="">Abschließen</button>
+      </div>
+    </div><div class="abrechnung-row">
+      <div class="abrechnung-head">
+        <span class="aname">Bedienung 4</span>
+        <span class="status-pill offen">Offen</span>
+      </div>
+      <div class="ar-grid">
+        <div class="ar-field"><label>Soll (App-Umsatz)</label><div class="val">0,00&nbsp;€</div></div>
+        <div class="ar-field"><label>Ist (gezähltes Bargeld)</label>
+          <input type="number" inputmode="decimal" step="0.01" class="ist-input" data-ist="3" value="" placeholder="0,00">
+        </div>
+      </div>
+      <div class="diff-line">
+        <span>Differenz</span>
+        <span class="diff-val" style="color:var(--text-faint)">–</span>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn btn-primary" data-close="3" disabled="">Abschließen</button>
+      </div>
+    </div>
+    <button class="btn btn-full" id="copy-summary" style="margin-top:14px;">Zusammenfassung kopieren</button>
+  </section>
+    <section id="view-einstellungen" class="view">
+    <div class="section-title">Veranstaltung</div>
+    <div class="field-row">
+      <label>Name der Veranstaltung</label>
+      <input type="text" id="cfg-eventname" value="Vereinsfest">
+    </div>
+
+    <div class="section-title">Bedienungen (1–6)</div>
+    <div class="stepper">
+      <button id="b-minus">−</button>
+      <span class="num" id="b-count">4</span>
+      <button id="b-plus">+</button>
+    </div>
+    <div class="name-inputs"><input type="text" data-bname="0" value="Bedienung 1" placeholder="Name Bedienung 1"><input type="text" data-bname="1" value="Bedienung 2" placeholder="Name Bedienung 2"><input type="text" data-bname="2" value="Bedienung 3" placeholder="Name Bedienung 3"><input type="text" data-bname="3" value="Bedienung 4" placeholder="Name Bedienung 4"></div>
+
+    <div class="section-title">Produkte</div>
+    <div id="prod-list"><div class="prod-row">
+      <input type="text" data-pname="0" value="Bier 0,5l" placeholder="Produktname">
+      <input type="number" step="0.10" data-pprice="0" value="4" placeholder="Preis">
+      <input type="text" data-pcat="0" value="Getränke" placeholder="Kategorie">
+      <button class="icon-btn" data-pdel="0">✕</button>
+    </div><div class="prod-row">
+      <input type="text" data-pname="1" value="Radler 0,5l" placeholder="Produktname">
+      <input type="number" step="0.10" data-pprice="1" value="4" placeholder="Preis">
+      <input type="text" data-pcat="1" value="Getränke" placeholder="Kategorie">
+      <button class="icon-btn" data-pdel="1">✕</button>
+    </div><div class="prod-row">
+      <input type="text" data-pname="2" value="Wasser 0,33l" placeholder="Produktname">
+      <input type="number" step="0.10" data-pprice="2" value="2.5" placeholder="Preis">
+      <input type="text" data-pcat="2" value="Getränke" placeholder="Kategorie">
+      <button class="icon-btn" data-pdel="2">✕</button>
+    </div><div class="prod-row">
+      <input type="text" data-pname="3" value="Cola / Fanta" placeholder="Produktname">
+      <input type="number" step="0.10" data-pprice="3" value="3" placeholder="Preis">
+      <input type="text" data-pcat="3" value="Getränke" placeholder="Kategorie">
+      <button class="icon-btn" data-pdel="3">✕</button>
+    </div><div class="prod-row">
+      <input type="text" data-pname="4" value="Wein 0,2l" placeholder="Produktname">
+      <input type="number" step="0.10" data-pprice="4" value="4.5" placeholder="Preis">
+      <input type="text" data-pcat="4" value="Getränke" placeholder="Kategorie">
+      <button class="icon-btn" data-pdel="4">✕</button>
+    </div><div class="prod-row">
+      <input type="text" data-pname="5" value="Bratwurst im Brötchen" placeholder="Produktname">
+      <input type="number" step="0.10" data-pprice="5" value="4.5" placeholder="Preis">
+      <input type="text" data-pcat="5" value="Speisen" placeholder="Kategorie">
+      <button class="icon-btn" data-pdel="5">✕</button>
+    </div><div class="prod-row">
+      <input type="text" data-pname="6" value="Steak im Brötchen" placeholder="Produktname">
+      <input type="number" step="0.10" data-pprice="6" value="6" placeholder="Preis">
+      <input type="text" data-pcat="6" value="Speisen" placeholder="Kategorie">
+      <button class="icon-btn" data-pdel="6">✕</button>
+    </div><div class="prod-row">
+      <input type="text" data-pname="7" value="Pommes" placeholder="Produktname">
+      <input type="number" step="0.10" data-pprice="7" value="3.5" placeholder="Preis">
+      <input type="text" data-pcat="7" value="Speisen" placeholder="Kategorie">
+      <button class="icon-btn" data-pdel="7">✕</button>
+    </div><div class="prod-row">
+      <input type="text" data-pname="8" value="Kuchen" placeholder="Produktname">
+      <input type="number" step="0.10" data-pprice="8" value="2.5" placeholder="Preis">
+      <input type="text" data-pcat="8" value="Sonstiges" placeholder="Kategorie">
+      <button class="icon-btn" data-pdel="8">✕</button>
+    </div></div>
+    <button class="btn btn-full" id="prod-add">Produkt hinzufügen</button>
+
+    <div class="danger-zone">
+      <h3 style="margin:0;font-size:14px;color:var(--red);">Neue Veranstaltung starten</h3>
+      <p>Löscht alle Verkäufe und Abrechnungen dieses Fests. Produkte und Bedienungen bleiben erhalten. Kann nicht rückgängig gemacht werden.</p>
+      <button class="btn btn-danger-outline btn-full" id="reset-event">Verkäufe &amp; Abrechnungen zurücksetzen</button>
+    </div>
+  </section>
+  </main>
+</div>
+
+<div class="cart-bar" id="cart-bar" style="display: block;">
+  <div class="cart-items" id="cart-items"><div class="empty-hint">Warenkorb leer</div></div>
+  <div class="cart-summary" id="cart-toggle">
+    <div class="info" id="cart-info">Bedienung 1 · 0 Artikel</div>
+    <div class="total" id="cart-total">0,00&nbsp;€</div>
+  </div>
+  <div class="cart-actions">
+    <button class="btn btn-ghost" id="cart-clear">Leeren</button>
+    <button class="btn btn-primary" id="cart-book" disabled="">Buchen</button>
+  </div>
+</div>
+
+<nav id="bottom-nav">
+  <button data-view="kasse" class="active"><span class="dot"></span>Kasse</button>
+  <button data-view="bedienungen"><span class="dot"></span>Bedienungen</button>
+  <button data-view="abrechnung"><span class="dot"></span>Abrechnung</button>
+  <button data-view="einstellungen"><span class="dot"></span>Einstellungen</button>
+</nav>
+
+<script>
+const DEFAULT_CONFIG = {
+  eventName: "Vereinsfest",
+  bedienungenCount: 4,
+  bedienungenNames: ["Bedienung 1","Bedienung 2","Bedienung 3","Bedienung 4","Bedienung 5","Bedienung 6"],
+  products: [
+    {id:"p1",name:"Bier 0,5l",price:4.00,category:"Getränke"},
+    {id:"p2",name:"Radler 0,5l",price:4.00,category:"Getränke"},
+    {id:"p3",name:"Wasser 0,33l",price:2.50,category:"Getränke"},
+    {id:"p4",name:"Cola / Fanta",price:3.00,category:"Getränke"},
+    {id:"p5",name:"Wein 0,2l",price:4.50,category:"Getränke"},
+    {id:"p6",name:"Bratwurst im Brötchen",price:4.50,category:"Speisen"},
+    {id:"p7",name:"Steak im Brötchen",price:6.00,category:"Speisen"},
+    {id:"p8",name:"Pommes",price:3.50,category:"Speisen"},
+    {id:"p9",name:"Kuchen",price:2.50,category:"Sonstiges"}
+  ]
+};
+
+let state = {
+  config: null,
+  transactions: [],
+  settlements: {},
+  cart: {},
+  activeBedienung: 0,
+  activeCategory: "Alle",
+  activeView: "kasse",
+  cartOpen: false,
+  loaded: false
+};
+
+function fmt(n){
+  return (Math.round(n*100)/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+}
+function fmtTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+}
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+function uid(){
+  return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+}
+
+async function storageGet(key, fallback){
+  try{
+    const r = await window.storage.get(key, true);
+    if(!r) return fallback;
+    return JSON.parse(r.value);
+  }catch(e){
+    return fallback;
+  }
+}
+async function storageSet(key, value){
+  try{
+    await window.storage.set(key, JSON.stringify(value), true);
+    return true;
+  }catch(e){
+    console.error('Storage error', key, e);
+    return false;
+  }
+}
+
+function setSyncing(on){
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  if(on){ dot.classList.add('syncing'); txt.textContent = 'synchronisiere…'; }
+  else{ dot.classList.remove('syncing'); txt.textContent = 'aktualisiert ' + fmtTime(Date.now()); }
+}
+
+async function loadAll(){
+  setSyncing(true);
+  const cfg = await storageGet('kasse-config', null);
+  state.config = cfg || JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  state.transactions = await storageGet('kasse-transactions', []);
+  state.settlements = await storageGet('kasse-settlements', {});
+  if(!cfg) await storageSet('kasse-config', state.config);
+  document.getElementById('event-name').textContent = state.config.eventName || 'Vereinsfest';
+  state.loaded = true;
+  setSyncing(false);
+  renderAll();
+}
+
+async function refreshLive(){
+  const editing = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT');
+  if(editing) return;
+  setSyncing(true);
+  state.transactions = await storageGet('kasse-transactions', state.transactions);
+  state.settlements = await storageGet('kasse-settlements', state.settlements);
+  setSyncing(false);
+  if(state.activeView === 'kasse') renderKasse();
+  if(state.activeView === 'bedienungen') renderBedienungen();
+  if(state.activeView === 'abrechnung') renderAbrechnung();
+}
+setInterval(refreshLive, 6000);
+
+function soll(bIndex){
+  return state.transactions
+    .filter(t => t.bedienungIndex === bIndex && !t.voided)
+    .reduce((s,t) => s + t.total, 0);
+}
+function txCount(bIndex){
+  return state.transactions.filter(t => t.bedienungIndex === bIndex && !t.voided).length;
+}
+
+function switchView(name){
+  state.activeView = name;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('#bottom-nav button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  document.getElementById('cart-bar').style.display = (name === 'kasse') ? 'block' : 'none';
+  renderAll();
+}
+
+function renderAll(){
+  if(!state.loaded) return;
+  renderKasse();
+  renderBedienungen();
+  renderAbrechnung();
+  renderEinstellungen();
+}
+
+/* ---------- KASSE ---------- */
+function renderKasse(){
+  const el = document.getElementById('view-kasse');
+  const cfg = state.config;
+  const names = cfg.bedienungenNames.slice(0, cfg.bedienungenCount);
+  const categories = ["Alle", ...new Set(cfg.products.map(p => p.category))];
+
+  let html = '<div class="bedienung-row">';
+  names.forEach((n,i)=>{
+    html += `<button class="token ${i===state.activeBedienung?'active':''}" data-b="${i}">
+      <div class="circle">${i+1}</div>
+      <div class="name">${esc(n)}</div>
+      <div class="sub">${fmt(soll(i))}</div>
+    </button>`;
+  });
+  html += '</div>';
+
+  html += '<div class="cat-row">';
+  categories.forEach(c=>{
+    html += `<button class="cat-chip ${c===state.activeCategory?'active':''}" data-cat="${esc(c)}">${esc(c)}</button>`;
+  });
+  html += '</div>';
+
+  html += '<div class="product-grid">';
+  const visible = cfg.products.filter(p => state.activeCategory === 'Alle' || p.category === state.activeCategory);
+  visible.forEach(p=>{
+    const qty = state.cart[p.id] || 0;
+    html += `<button class="product-card" data-add="${p.id}">
+      ${qty > 0 ? `<span class="qty-badge">${qty}</span>` : ''}
+      <span class="pname">${esc(p.name)}</span>
+      <span class="pprice">${fmt(p.price)}</span>
+    </button>`;
+  });
+  html += '</div>';
+
+  const recent = state.transactions.slice(-8).reverse();
+  html += '<div class="section-title">Letzte Verkäufe</div>';
+  if(recent.length === 0){
+    html += '<div class="empty-hint">Noch keine Verkäufe gebucht.</div>';
+  } else {
+    html += '<div class="card">';
+    recent.forEach(t=>{
+      const bname = names[t.bedienungIndex] || ('Bedienung ' + (t.bedienungIndex+1));
+      html += `<div class="recent-item ${t.voided?'void':''}">
+        <div><div>${esc(bname)}</div><div class="rmeta">${fmtTime(t.ts)} · ${t.items.reduce((s,i)=>s+i.qty,0)} Artikel</div></div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="ramount">${fmt(t.total)}</span>
+          ${t.voided ? '' : `<button class="link-btn" data-void="${t.id}">Stornieren</button>`}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+  renderCartBar();
+}
+
+function renderCartBar(){
+  const items = Object.entries(state.cart).filter(([,q]) => q > 0);
+  const bar = document.getElementById('cart-bar');
+  if(state.activeView !== 'kasse'){ bar.style.display = 'none'; return; }
+  bar.style.display = 'block';
+  const cfg = state.config;
+  let total = 0, count = 0;
+  const itemsEl = document.getElementById('cart-items');
+  let itemsHtml = '';
+  items.forEach(([pid,qty])=>{
+    const p = cfg.products.find(pp => pp.id === pid);
+    if(!p) return;
+    total += p.price * qty;
+    count += qty;
+    itemsHtml += `<div class="cart-line"><span class="lname">${qty}× ${esc(p.name)}</span><span class="lmeta">${fmt(p.price*qty)}</span></div>`;
+  });
+  itemsEl.innerHTML = itemsHtml || '<div class="empty-hint">Warenkorb leer</div>';
+  itemsEl.classList.toggle('open', state.cartOpen);
+  const names = cfg.bedienungenNames.slice(0, cfg.bedienungenCount);
+  document.getElementById('cart-info').textContent = `${names[state.activeBedienung] || ''} · ${count} Artikel`;
+  document.getElementById('cart-total').textContent = fmt(total);
+  document.getElementById('cart-book').disabled = count === 0;
+}
+
+async function bookSale(){
+  const cfg = state.config;
+  const items = Object.entries(state.cart).filter(([,q]) => q > 0).map(([pid,qty])=>{
+    const p = cfg.products.find(pp => pp.id === pid);
+    return { productId: pid, name: p.name, price: p.price, qty };
+  });
+  if(items.length === 0) return;
+  const total = items.reduce((s,i)=> s + i.price*i.qty, 0);
+  const tx = { id: uid(), ts: Date.now(), bedienungIndex: state.activeBedienung, items, total, voided: false };
+  setSyncing(true);
+  state.transactions = await storageGet('kasse-transactions', state.transactions);
+  state.transactions.push(tx);
+  await storageSet('kasse-transactions', state.transactions);
+  setSyncing(false);
+  state.cart = {};
+  state.cartOpen = false;
+  renderKasse();
+}
+
+async function voidTx(id){
+  setSyncing(true);
+  state.transactions = await storageGet('kasse-transactions', state.transactions);
+  const t = state.transactions.find(x => x.id === id);
+  if(t) t.voided = true;
+  await storageSet('kasse-transactions', state.transactions);
+  setSyncing(false);
+  renderKasse();
+  renderBedienungen();
+  renderAbrechnung();
+}
+
+/* ---------- BEDIENUNGEN (readonly) ---------- */
+function renderBedienungen(){
+  const el = document.getElementById('view-bedienungen');
+  const cfg = state.config;
+  const names = cfg.bedienungenNames.slice(0, cfg.bedienungenCount);
+  let html = '<div class="section-title">Übersicht je Bedienung (nur lesend)</div><div class="bedienungen-grid">';
+  names.forEach((n,i)=>{
+    html += `<div class="b-card">
+      <div class="bnum">Bedienung ${i+1}</div>
+      <div class="bname">${esc(n)}</div>
+      <div class="btotal">${fmt(soll(i))}</div>
+      <div class="bcount">${txCount(i)} Verkäufe</div>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+/* ---------- ABRECHNUNG ---------- */
+function renderAbrechnung(){
+  const el = document.getElementById('view-abrechnung');
+  const cfg = state.config;
+  const names = cfg.bedienungenNames.slice(0, cfg.bedienungenCount);
+
+  let totalSoll = 0, totalIst = 0, allClosed = true;
+  let rows = '';
+  names.forEach((n,i)=>{
+    const s = soll(i);
+    const settlement = state.settlements[i] || {};
+    const hasIst = settlement.ist !== undefined && settlement.ist !== null && settlement.ist !== '';
+    const ist = hasIst ? Number(settlement.ist) : null;
+    totalSoll += s;
+    if(hasIst) totalIst += ist;
+    if(!settlement.closed) allClosed = false;
+    let diffHtml = '<span class="diff-val" style="color:var(--text-faint)">–</span>';
+    if(hasIst){
+      const diff = ist - s;
+      const cls = Math.abs(diff) < 0.005 ? 'match' : (diff < 0 ? 'minus' : 'plus');
+      diffHtml = `<span class="diff-val ${cls}">${diff >= 0 ? '+' : ''}${fmt(diff)}</span>`;
+    }
+    rows += `<div class="abrechnung-row">
+      <div class="abrechnung-head">
+        <span class="aname">${esc(n)}</span>
+        <span class="status-pill ${settlement.closed ? 'zu' : 'offen'}">${settlement.closed ? 'Abgerechnet' : 'Offen'}</span>
+      </div>
+      <div class="ar-grid">
+        <div class="ar-field"><label>Soll (App-Umsatz)</label><div class="val">${fmt(s)}</div></div>
+        <div class="ar-field"><label>Ist (gezähltes Bargeld)</label>
+          <input type="number" inputmode="decimal" step="0.01" class="ist-input" data-ist="${i}" value="${hasIst ? ist : ''}" placeholder="0,00" ${settlement.closed ? 'disabled' : ''}>
+        </div>
+      </div>
+      <div class="diff-line">
+        <span>Differenz</span>
+        ${diffHtml}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        ${settlement.closed
+          ? `<button class="btn btn-ghost" data-reopen="${i}">Wieder öffnen</button>`
+          : `<button class="btn btn-primary" data-close="${i}" ${hasIst ? '' : 'disabled'}>Abschließen</button>`}
+      </div>
+    </div>`;
+  });
+
+  const totalDiff = totalIst - totalSoll;
+  const diffCls = Math.abs(totalDiff) < 0.005 ? 'match' : (totalDiff < 0 ? 'minus' : 'plus');
+
+  el.innerHTML = `
+    <div class="section-title">Gesamtübersicht</div>
+    <div class="summary-grid">
+      <div class="metric"><div class="mlabel">Soll gesamt</div><div class="mval">${fmt(totalSoll)}</div></div>
+      <div class="metric"><div class="mlabel">Ist gesamt</div><div class="mval">${fmt(totalIst)}</div></div>
+      <div class="metric"><div class="mlabel">Differenz</div><div class="mval" style="color:var(--${diffCls === 'match' ? 'green' : diffCls === 'minus' ? 'red' : 'blue'})">${totalDiff >= 0 ? '+' : ''}${fmt(totalDiff)}</div></div>
+    </div>
+    <div class="section-title">Je Bedienung</div>
+    ${rows}
+    <button class="btn btn-full" id="copy-summary" style="margin-top:14px;">Zusammenfassung kopieren</button>
+  `;
+}
+
+async function saveIst(bIndex, value){
+  setSyncing(true);
+  state.settlements = await storageGet('kasse-settlements', state.settlements);
+  if(!state.settlements[bIndex]) state.settlements[bIndex] = {};
+  state.settlements[bIndex].ist = value;
+  await storageSet('kasse-settlements', state.settlements);
+  setSyncing(false);
+}
+
+async function closeSettlement(bIndex, closed){
+  setSyncing(true);
+  state.settlements = await storageGet('kasse-settlements', state.settlements);
+  if(!state.settlements[bIndex]) state.settlements[bIndex] = {};
+  state.settlements[bIndex].closed = closed;
+  state.settlements[bIndex].closedAt = closed ? Date.now() : null;
+  await storageSet('kasse-settlements', state.settlements);
+  setSyncing(false);
+  renderAbrechnung();
+}
+
+function copySummaryText(){
+  const cfg = state.config;
+  const names = cfg.bedienungenNames.slice(0, cfg.bedienungenCount);
+  let lines = [`${cfg.eventName} – Abrechnung`, ''];
+  let totalSoll = 0, totalIst = 0;
+  names.forEach((n,i)=>{
+    const s = soll(i);
+    const settlement = state.settlements[i] || {};
+    const ist = settlement.ist !== undefined && settlement.ist !== '' ? Number(settlement.ist) : null;
+    totalSoll += s;
+    if(ist !== null) totalIst += ist;
+    lines.push(`${n}: Soll ${fmt(s)} | Ist ${ist !== null ? fmt(ist) : '-'} | Diff ${ist !== null ? fmt(ist-s) : '-'}`);
+  });
+  lines.push('', `Gesamt: Soll ${fmt(totalSoll)} | Ist ${fmt(totalIst)} | Diff ${fmt(totalIst-totalSoll)}`);
+  const text = lines.join('\n');
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>{
+      const btn = document.getElementById('copy-summary');
+      const old = btn.textContent;
+      btn.textContent = 'Kopiert';
+      setTimeout(()=>{ btn.textContent = old; }, 1500);
+    }).catch(()=>{});
+  }
+}
+
+/* ---------- EINSTELLUNGEN ---------- */
+function renderEinstellungen(){
+  const el = document.getElementById('view-einstellungen');
+  const cfg = state.config;
+
+  let namesHtml = '';
+  for(let i=0;i<cfg.bedienungenCount;i++){
+    namesHtml += `<input type="text" data-bname="${i}" value="${esc(cfg.bedienungenNames[i] || ('Bedienung '+(i+1)))}" placeholder="Name Bedienung ${i+1}">`;
+  }
+
+  let prodHtml = '';
+  cfg.products.forEach((p,idx)=>{
+    prodHtml += `<div class="prod-row">
+      <input type="text" data-pname="${idx}" value="${esc(p.name)}" placeholder="Produktname">
+      <input type="number" step="0.10" data-pprice="${idx}" value="${p.price}" placeholder="Preis">
+      <input type="text" data-pcat="${idx}" value="${esc(p.category)}" placeholder="Kategorie">
+      <button class="icon-btn" data-pdel="${idx}">✕</button>
+    </div>`;
+  });
+
+  el.innerHTML = `
+    <div class="section-title">Veranstaltung</div>
+    <div class="field-row">
+      <label>Name der Veranstaltung</label>
+      <input type="text" id="cfg-eventname" value="${esc(cfg.eventName)}">
+    </div>
+
+    <div class="section-title">Bedienungen (1–6)</div>
+    <div class="stepper">
+      <button id="b-minus">−</button>
+      <span class="num" id="b-count">${cfg.bedienungenCount}</span>
+      <button id="b-plus">+</button>
+    </div>
+    <div class="name-inputs">${namesHtml}</div>
+
+    <div class="section-title">Produkte</div>
+    <div id="prod-list">${prodHtml}</div>
+    <button class="btn btn-full" id="prod-add">Produkt hinzufügen</button>
+
+    <div class="danger-zone">
+      <h3 style="margin:0;font-size:14px;color:var(--red);">Neue Veranstaltung starten</h3>
+      <p>Löscht alle Verkäufe und Abrechnungen dieses Fests. Produkte und Bedienungen bleiben erhalten. Kann nicht rückgängig gemacht werden.</p>
+      <button class="btn btn-danger-outline btn-full" id="reset-event">Verkäufe & Abrechnungen zurücksetzen</button>
+    </div>
+  `;
+}
+
+async function persistConfig(){
+  await storageSet('kasse-config', state.config);
+}
+
+/* ---------- EVENT WIRING ---------- */
+document.getElementById('cart-toggle').addEventListener('click', ()=>{
+  state.cartOpen = !state.cartOpen;
+  renderCartBar();
+});
+document.getElementById('cart-clear').addEventListener('click', ()=>{
+  state.cart = {};
+  state.cartOpen = false;
+  renderKasse();
+});
+document.getElementById('cart-book').addEventListener('click', bookSale);
+
+document.querySelectorAll('#bottom-nav button').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchView(btn.dataset.view));
+});
+
+document.getElementById('app').addEventListener('click', (e)=>{
+  const bBtn = e.target.closest('[data-b]');
+  if(bBtn){ state.activeBedienung = Number(bBtn.dataset.b); renderKasse(); return; }
+
+  const catBtn = e.target.closest('[data-cat]');
+  if(catBtn){ state.activeCategory = catBtn.dataset.cat; renderKasse(); return; }
+
+  const addBtn = e.target.closest('[data-add]');
+  if(addBtn){
+    const pid = addBtn.dataset.add;
+    state.cart[pid] = (state.cart[pid] || 0) + 1;
+    renderKasse();
+    return;
+  }
+
+  const voidBtn = e.target.closest('[data-void]');
+  if(voidBtn){
+    if(confirm('Diesen Verkauf stornieren?')) voidTx(voidBtn.dataset.void);
+    return;
+  }
+
+  const closeBtn = e.target.closest('[data-close]');
+  if(closeBtn){ closeSettlement(Number(closeBtn.dataset.close), true); return; }
+  const reopenBtn = e.target.closest('[data-reopen]');
+  if(reopenBtn){ closeSettlement(Number(reopenBtn.dataset.reopen), false); return; }
+
+  if(e.target.id === 'copy-summary'){ copySummaryText(); return; }
+
+  if(e.target.id === 'b-plus'){
+    if(state.config.bedienungenCount < 6){ state.config.bedienungenCount++; persistConfig(); renderEinstellungen(); renderKasse(); }
+    return;
+  }
+  if(e.target.id === 'b-minus'){
+    if(state.config.bedienungenCount > 1){ state.config.bedienungenCount--; persistConfig(); renderEinstellungen(); renderKasse(); }
+    return;
+  }
+  if(e.target.id === 'prod-add'){
+    state.config.products.push({id: uid(), name:'Neues Produkt', price:0, category:'Sonstiges'});
+    persistConfig(); renderEinstellungen(); renderKasse();
+    return;
+  }
+  const pdel = e.target.closest('[data-pdel]');
+  if(pdel){
+    state.config.products.splice(Number(pdel.dataset.pdel), 1);
+    persistConfig(); renderEinstellungen(); renderKasse();
+    return;
+  }
+  if(e.target.id === 'reset-event'){
+    if(confirm('Wirklich alle Verkäufe und Abrechnungen löschen? Dies kann nicht rückgängig gemacht werden.')){
+      state.transactions = [];
+      state.settlements = {};
+      storageSet('kasse-transactions', []);
+      storageSet('kasse-settlements', {});
+      renderAll();
+    }
+    return;
+  }
+});
+
+document.getElementById('app').addEventListener('input', (e)=>{
+  if(e.target.id === 'cfg-eventname'){
+    state.config.eventName = e.target.value;
+    document.getElementById('event-name').textContent = e.target.value || 'Vereinsfest';
+    persistConfig();
+    return;
+  }
+  const bname = e.target.closest('[data-bname]');
+  if(bname){
+    state.config.bedienungenNames[Number(bname.dataset.bname)] = e.target.value;
+    persistConfig();
+    return;
+  }
+  const pname = e.target.closest('[data-pname]');
+  if(pname){ state.config.products[Number(pname.dataset.pname)].name = e.target.value; persistConfig(); return; }
+  const pprice = e.target.closest('[data-pprice]');
+  if(pprice){ state.config.products[Number(pprice.dataset.pprice)].price = Number(e.target.value) || 0; persistConfig(); return; }
+  const pcat = e.target.closest('[data-pcat]');
+  if(pcat){ state.config.products[Number(pcat.dataset.pcat)].category = e.target.value; persistConfig(); return; }
+
+  const ist = e.target.closest('[data-ist]');
+  if(ist){ saveIst(Number(ist.dataset.ist), e.target.value); return; }
+});
+
+document.getElementById('app').addEventListener('change', (e)=>{
+  const pname = e.target.closest('[data-pname]');
+  const pprice = e.target.closest('[data-pprice]');
+  const pcat = e.target.closest('[data-pcat]');
+  if(pname || pprice || pcat){ renderKasse(); }
+});
+
+loadAll();
+</script>
+
+
+</body></html>

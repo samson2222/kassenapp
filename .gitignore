@@ -1,0 +1,9 @@
+node_modules/
+server/node_modules/
+client/node_modules/
+client/dist/
+server/kassenapp.sqlite
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.DS_Store

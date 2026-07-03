@@ -1,0 +1,13 @@
+services:
+  kassenapp:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - kassenapp-data:/data
+    environment:
+      DATA_DIR: /data
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+
+volumes:
+  kassenapp-data:
