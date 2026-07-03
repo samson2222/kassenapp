@@ -494,6 +494,65 @@ input.ist-input:focus { outline: none; border-color: var(--primary); background:
 }
 .prod-field input:focus,
 .prod-field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,58,107,.1); }
+
+/* ── Product order buttons ─── */
+.prod-order-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.prod-order-btns button {
+  width: 28px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.prod-order-btns button:disabled { opacity: .25; }
+
+/* ── Product color swatches ─── */
+.prod-card-row3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.prod-color-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+.prod-color-swatches {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  transition: transform .1s, box-shadow .1s;
+  outline: none;
+}
+.color-swatch:active { transform: scale(.9); }
+.color-swatch.active {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text);
+}
 .icon-btn {
   width: 36px; height: 36px; border-radius: 8px;
   background: var(--red-bg);

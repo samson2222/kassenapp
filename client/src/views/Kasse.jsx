@@ -1,4 +1,5 @@
 import { useStore } from '../store';
+import { PRODUCT_COLORS } from './Einstellungen';
 
 function fmt(n) {
   return (Math.round(n * 100) / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
@@ -58,8 +59,12 @@ export default function Kasse() {
       <div className="product-grid">
         {visible.map(p => {
           const qty = cart[p.id] || 0;
+          const colorDef = PRODUCT_COLORS.find(c => c.id === (p.color || 'none'));
+          const cardStyle = colorDef?.border
+            ? { borderLeftColor: colorDef.border, borderLeftWidth: 4, background: colorDef.bg }
+            : {};
           return (
-            <button key={p.id} className="product-card" onClick={() => addToCart(p.id)}>
+            <button key={p.id} className="product-card" style={cardStyle} onClick={() => addToCart(p.id)}>
               {qty > 0 && <span className="qty-badge">{qty}</span>}
               <span className="pname">{p.name}</span>
               <span className="pprice">{fmt(p.price)}</span>

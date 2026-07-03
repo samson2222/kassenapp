@@ -2,6 +2,17 @@ import { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { api } from '../api';
 
+export const PRODUCT_COLORS = [
+  { id: 'none',   swatch: '#E5E7EB' },
+  { id: 'blue',   swatch: '#3B82F6', bg: '#EFF6FF', border: '#3B82F6' },
+  { id: 'green',  swatch: '#22C55E', bg: '#F0FDF4', border: '#22C55E' },
+  { id: 'amber',  swatch: '#F59E0B', bg: '#FFFBEB', border: '#F59E0B' },
+  { id: 'red',    swatch: '#FB7185', bg: '#FFF1F2', border: '#FB7185' },
+  { id: 'purple', swatch: '#A855F7', bg: '#FAF5FF', border: '#A855F7' },
+  { id: 'teal',   swatch: '#14B8A6', bg: '#F0FDFA', border: '#14B8A6' },
+  { id: 'orange', swatch: '#FB923C', bg: '#FFF7ED', border: '#FB923C' },
+];
+
 function uid() {
   return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 }
@@ -92,6 +103,18 @@ export default function Einstellungen() {
     setProducts(products.filter((_, idx) => idx !== i));
   }
 
+  function moveProduct(i, dir) {
+    const p = [...products];
+    const j = i + dir;
+    if (j < 0 || j >= p.length) return;
+    [p[i], p[j]] = [p[j], p[i]];
+    setProducts(p);
+  }
+
+  function setProductColor(i, colorId) {
+    setProducts(products.map((p, idx) => idx === i ? { ...p, color: colorId } : p));
+  }
+
   function changeCount(delta) {
     setCount(c => Math.max(1, Math.min(6, c + delta)));
   }
@@ -149,6 +172,10 @@ export default function Einstellungen() {
         {products.map((p, i) => (
           <div key={p.id} className="prod-card">
             <div className="prod-card-row1">
+              <div className="prod-order-btns">
+                <button onClick={() => moveProduct(i, -1)} disabled={i === 0}>↑</button>
+                <button onClick={() => moveProduct(i,  1)} disabled={i === products.length - 1}>↓</button>
+              </div>
               <input
                 type="text"
                 value={p.name}
@@ -173,6 +200,20 @@ export default function Einstellungen() {
                 <select value={p.category} onChange={e => setProductField(i, 'category', e.target.value)}>
                   {categories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
+              </div>
+            </div>
+            <div className="prod-card-row3">
+              <span className="prod-color-label">Farbe</span>
+              <div className="prod-color-swatches">
+                {PRODUCT_COLORS.map(c => (
+                  <button
+                    key={c.id}
+                    className={`color-swatch ${(p.color || 'none') === c.id ? 'active' : ''}`}
+                    style={{ background: c.swatch }}
+                    onClick={() => setProductColor(i, c.id)}
+                    title={c.id}
+                  />
+                ))}
               </div>
             </div>
           </div>
