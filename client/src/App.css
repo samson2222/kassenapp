@@ -162,8 +162,9 @@ header.top .title-block p { margin: 1px 0 0; font-size: 12px; color: var(--text-
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
   gap: 10px;
-  padding-bottom: 160px;
+  padding-bottom: 16px;
 }
+#view-kasse { padding-bottom: 190px; }
 .product-card {
   position: relative;
   background: var(--surface);
