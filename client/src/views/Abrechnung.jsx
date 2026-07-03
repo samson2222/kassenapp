@@ -4,15 +4,22 @@ import { useStore } from '../store';
 function fmt(n) {
   return (Math.round(n * 100) / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
 }
+function toNum(str) {
+  const n = parseFloat(str);
+  return isNaN(n) ? null : n;
+}
 function soll(transactions, bIndex) {
   return transactions.filter(t => t.bedienungIndex === bIndex && !t.voided).reduce((s, t) => s + t.total, 0);
 }
 
 export default function Abrechnung() {
   const { event, transactions, settlements, saveSettlement } = useStore();
-  const [istValues, setIstValues]             = useState({});
+
+  // Local input state – keyed by bedienung index
+  const [istValues,       setIstValues]       = useState({});
   const [startgeldValues, setStartgeldValues] = useState({});
-  // dirty flags: true while user is editing, prevents SSE from overwriting local input
+  const [saveStates,      setSaveStates]      = useState({}); // 'idle'|'saving'|'saved'|'error'
+  // Dirty flags prevent SSE broadcasts from overwriting while user is editing
   const istDirty       = useRef({});
   const startgeldDirty = useRef({});
 
@@ -20,7 +27,7 @@ export default function Abrechnung() {
   const names      = (cfg.bedienungenNames || []).slice(0, cfg.bedienungenCount || 0);
   const provisions = cfg.bedienungenProvision || [];
 
-  // Sync from server – only update fields the user is NOT currently editing
+  // Sync from server only for fields not currently being edited
   useEffect(() => {
     setIstValues(prev => {
       const next = { ...prev };
@@ -40,36 +47,33 @@ export default function Abrechnung() {
       });
       return next;
     });
-  }, [settlements]);
+  }, [settlements]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Gesamttotals
-  let totalSoll = 0, totalNetto = 0, totalProvision = 0;
-  names.forEach((_, i) => {
-    totalSoll += soll(transactions, i);
-    const s = settlements[i];
-    if (s?.ist != null) {
-      const netto = Number(s.ist) - (s.startgeld != null ? Number(s.startgeld) : 0);
-      const pct   = provisions[i] ?? 10;
-      totalNetto     += netto;
-      totalProvision += netto * (pct / 100);
+  // Save BOTH ist + startgeld together for a bedienung
+  async function doSave(i) {
+    const ist       = toNum(istValues[i]);
+    const startgeld = toNum(startgeldValues[i]);
+    setSaveStates(s => ({ ...s, [i]: 'saving' }));
+    try {
+      await saveSettlement(i, { ist, startgeld });
+      istDirty.current[i]       = false;
+      startgeldDirty.current[i] = false;
+      setSaveStates(s => ({ ...s, [i]: 'saved' }));
+      setTimeout(() => setSaveStates(s => ({ ...s, [i]: 'idle' })), 2000);
+    } catch (err) {
+      console.error('saveSettlement error:', err);
+      setSaveStates(s => ({ ...s, [i]: 'error' }));
+      setTimeout(() => setSaveStates(s => ({ ...s, [i]: 'idle' })), 3000);
     }
-  });
-  const totalAuszahlung = totalNetto - totalProvision;
-
-  async function handleIstBlur(i) {
-    const val = istValues[i] ?? '';
-    await saveSettlement(i, { ist: val === '' ? null : Number(val) });
-    istDirty.current[i] = false;
-  }
-
-  async function handleStartgeldBlur(i) {
-    const val = startgeldValues[i] ?? '';
-    await saveSettlement(i, { startgeld: val === '' ? null : Number(val) });
-    startgeldDirty.current[i] = false;
   }
 
   async function handleClose(i, closed) {
-    await saveSettlement(i, { closed });
+    // Save current input values along with closed state
+    const ist       = toNum(istValues[i]);
+    const startgeld = toNum(startgeldValues[i]);
+    await saveSettlement(i, { ist, startgeld, closed });
+    istDirty.current[i]       = false;
+    startgeldDirty.current[i] = false;
   }
 
   function copySummary() {
@@ -99,6 +103,19 @@ export default function Abrechnung() {
     navigator.clipboard?.writeText(lines.join('\n'));
   }
 
+  // Totals use committed server values
+  let totalSoll = 0, totalNetto = 0, totalProvision = 0;
+  names.forEach((_, i) => {
+    totalSoll += soll(transactions, i);
+    const s = settlements[i];
+    if (s?.ist != null) {
+      const netto = Number(s.ist) - (s.startgeld != null ? Number(s.startgeld) : 0);
+      totalNetto     += netto;
+      totalProvision += netto * ((provisions[i] ?? 10) / 100);
+    }
+  });
+  const totalAuszahlung = totalNetto - totalProvision;
+
   return (
     <section id="view-abrechnung">
       <div className="print-header">
@@ -108,18 +125,9 @@ export default function Abrechnung() {
 
       <div className="section-title">Gesamtübersicht</div>
       <div className="summary-grid summary-grid-4">
-        <div className="metric">
-          <div className="mlabel">Soll gesamt</div>
-          <div className="mval">{fmt(totalSoll)}</div>
-        </div>
-        <div className="metric">
-          <div className="mlabel">Netto gesamt</div>
-          <div className="mval">{fmt(totalNetto)}</div>
-        </div>
-        <div className="metric">
-          <div className="mlabel">Provision gesamt</div>
-          <div className="mval">{fmt(totalProvision)}</div>
-        </div>
+        <div className="metric"><div className="mlabel">Soll gesamt</div><div className="mval">{fmt(totalSoll)}</div></div>
+        <div className="metric"><div className="mlabel">Netto gesamt</div><div className="mval">{fmt(totalNetto)}</div></div>
+        <div className="metric"><div className="mlabel">Provision gesamt</div><div className="mval">{fmt(totalProvision)}</div></div>
         <div className="metric">
           <div className="mlabel">Auszahlung gesamt</div>
           <div className="mval" style={{ color: 'var(--primary)' }}>{fmt(totalAuszahlung)}</div>
@@ -128,17 +136,22 @@ export default function Abrechnung() {
 
       <div className="section-title">Je Bedienung</div>
       {names.map((name, i) => {
-        const s          = soll(transactions, i);
         const settlement = settlements[i] || {};
-        const hasIst     = settlement.ist != null;
-        const ist        = hasIst ? Number(settlement.ist) : null;
-        const startgeld  = settlement.startgeld != null ? Number(settlement.startgeld) : 0;
-        const netto      = ist !== null ? ist - startgeld : null;
-        const pct        = provisions[i] ?? 10;
-        const provision  = netto !== null ? netto * (pct / 100) : null;
-        const auszahlung = provision !== null ? netto - provision : null;
-        const diff       = netto !== null ? netto - s : null;
-        const diffCls    = diff === null ? '' : Math.abs(diff) < 0.005 ? 'match' : diff < 0 ? 'minus' : 'plus';
+        const hasIst     = settlement.ist != null || (istValues[i] ?? '') !== '';
+
+        // Live calculation from LOCAL input values
+        const localIst       = toNum(istValues[i] ?? '');
+        const localStartgeld = toNum(startgeldValues[i] ?? '') ?? 0;
+        const s              = soll(transactions, i);
+        const netto          = localIst !== null ? localIst - localStartgeld : null;
+        const pct            = provisions[i] ?? 10;
+        const provision      = netto !== null ? netto * (pct / 100) : null;
+        const auszahlung     = provision !== null ? netto - provision : null;
+        const diff           = netto !== null ? netto - s : null;
+        const diffCls        = diff === null ? '' : Math.abs(diff) < 0.005 ? 'match' : diff < 0 ? 'minus' : 'plus';
+
+        const ss = saveStates[i] || 'idle';
+        const saveLabel = ss === 'saving' ? 'Speichert…' : ss === 'saved' ? '✓ Gespeichert' : ss === 'error' ? '✗ Fehler' : 'Speichern';
 
         return (
           <div key={i} className="abrechnung-row">
@@ -165,7 +178,7 @@ export default function Abrechnung() {
                     startgeldDirty.current[i] = true;
                     setStartgeldValues(v => ({ ...v, [i]: e.target.value }));
                   }}
-                  onBlur={() => handleStartgeldBlur(i)}
+                  onBlur={() => doSave(i)}
                 />
               </div>
               <div className="ar-field">
@@ -182,12 +195,12 @@ export default function Abrechnung() {
                     istDirty.current[i] = true;
                     setIstValues(v => ({ ...v, [i]: e.target.value }));
                   }}
-                  onBlur={() => handleIstBlur(i)}
+                  onBlur={() => doSave(i)}
                 />
               </div>
             </div>
 
-            {/* Berechnete Felder */}
+            {/* Live-Berechnung */}
             <div className="ar-derived">
               <div className="ar-field">
                 <label>Soll (App)</label>
@@ -222,9 +235,24 @@ export default function Abrechnung() {
               {settlement.closed ? (
                 <button className="btn btn-ghost" onClick={() => handleClose(i, false)}>Wieder öffnen</button>
               ) : (
-                <button className="btn btn-primary" onClick={() => handleClose(i, true)} disabled={!hasIst}>
-                  Abschließen
-                </button>
+                <>
+                  <button
+                    className="btn btn-ghost"
+                    style={{ opacity: ss === 'saving' ? 0.7 : 1, color: ss === 'error' ? 'var(--red)' : undefined }}
+                    disabled={ss === 'saving' || settlement.closed}
+                    onClick={() => doSave(i)}
+                  >
+                    {saveLabel}
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    style={{ flex: 1 }}
+                    disabled={!hasIst || ss === 'saving'}
+                    onClick={() => handleClose(i, true)}
+                  >
+                    Abschließen
+                  </button>
+                </>
               )}
             </div>
           </div>

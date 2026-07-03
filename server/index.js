@@ -78,10 +78,15 @@ app.patch('/api/transactions/:id/void', (req, res) => {
 
 // ── Settlements ───────────────────────────────────────────────────────────────
 app.put('/api/settlements/:bIndex', (req, res) => {
-  const event = db.getActiveEvent();
-  db.saveSettlement(event.id, Number(req.params.bIndex), req.body);
-  broadcast(db.getFullState());
-  res.json({ ok: true });
+  try {
+    const event = db.getActiveEvent();
+    db.saveSettlement(event.id, Number(req.params.bIndex), req.body);
+    broadcast(db.getFullState());
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[settlements PUT] error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── Config (admin) ────────────────────────────────────────────────────────────
