@@ -442,29 +442,58 @@ input.ist-input:focus { outline: none; border-color: var(--primary); background:
   font-weight: 500;
 }
 .name-inputs input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,58,107,.1); }
-.prod-row { display: grid; grid-template-columns: 1fr 80px 1fr 36px; gap: 6px; align-items: center; margin-bottom: 8px; }
-.prod-row input,
-.prod-row select {
+.prod-card {
   background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 12px 10px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow-xs);
+}
+.prod-card-row1 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.prod-card-row1 input {
+  flex: 1;
+  background: var(--surface-2);
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
-  padding: 9px 10px;
-  font-size: 13px;
-  font-weight: 500;
-  width: 100%;
+  padding: 9px 11px;
+  font-size: 14px;
+  font-weight: 600;
 }
-.prod-row input:focus,
-.prod-row select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,58,107,.1); }
-.prod-row-header {
-  font-size: 11px;
+.prod-card-row1 input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,58,107,.1); }
+.prod-card-row2 {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px;
+}
+.prod-field label {
+  display: block;
+  font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .07em;
   color: var(--text-faint);
-  padding: 0 2px 4px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
+.prod-field input,
+.prod-field select {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.prod-field input:focus,
+.prod-field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,58,107,.1); }
 .icon-btn {
   width: 36px; height: 36px; border-radius: 8px;
   background: var(--red-bg);

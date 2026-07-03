@@ -145,18 +145,36 @@ export default function Einstellungen() {
           + Kategorie
         </button>
       </div>
-      <div className="prod-row prod-row-header">
-        <span>Name</span><span>Preis</span><span>Kategorie</span><span />
-      </div>
       <div id="prod-list">
         {products.map((p, i) => (
-          <div key={p.id} className="prod-row">
-            <input type="text"   value={p.name}  placeholder="Produktname" onChange={e => setProductField(i, 'name',  e.target.value)} />
-            <input type="number" value={p.price} placeholder="0,00"        onChange={e => setProductField(i, 'price', e.target.value)} step="0.10" />
-            <select value={p.category} onChange={e => setProductField(i, 'category', e.target.value)}>
-              {categories.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <button className="icon-btn" onClick={() => removeProduct(i)}>✕</button>
+          <div key={p.id} className="prod-card">
+            <div className="prod-card-row1">
+              <input
+                type="text"
+                value={p.name}
+                placeholder="Produktname"
+                onChange={e => setProductField(i, 'name', e.target.value)}
+              />
+              <button className="icon-btn" onClick={() => removeProduct(i)}>✕</button>
+            </div>
+            <div className="prod-card-row2">
+              <div className="prod-field">
+                <label>Preis (€)</label>
+                <input
+                  type="number"
+                  value={p.price}
+                  placeholder="0,00"
+                  step="0.10"
+                  onChange={e => setProductField(i, 'price', e.target.value)}
+                />
+              </div>
+              <div className="prod-field">
+                <label>Kategorie</label>
+                <select value={p.category} onChange={e => setProductField(i, 'category', e.target.value)}>
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
           </div>
         ))}
       </div>
