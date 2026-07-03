@@ -19,17 +19,32 @@ export default function Einstellungen() {
   const { event, resetEvent, archiveEvent, updateConfig } = useStore();
   const cfg = event?.config || {};
 
+  const DEFAULT_CATS = ['Getränke', 'Speisen', 'Sonstiges'];
+
   const [eventName, setEventName] = useState(cfg.eventName || event?.name || '');
   const [count, setCount]         = useState(cfg.bedienungenCount || 4);
   const [names, setNames]         = useState(cfg.bedienungenNames || []);
   const [products, setProducts]   = useState(cfg.products || []);
   const [saveState, setSaveState] = useState('idle'); // 'idle' | 'saving' | 'saved'
 
+  // Categories: defaults + any custom ones already used in products
+  const [categories, setCategories] = useState(
+    () => [...new Set([...DEFAULT_CATS, ...(cfg.products || []).map(p => p.category).filter(Boolean)])]
+  );
+
+  function addCategory() {
+    const name = prompt('Name der neuen Kategorie:');
+    if (!name?.trim()) return;
+    setCategories(prev => [...new Set([...prev, name.trim()])]);
+  }
+
   useEffect(() => {
+    const p = cfg.products || [];
     setEventName(cfg.eventName || event?.name || '');
     setCount(cfg.bedienungenCount || 4);
     setNames(cfg.bedienungenNames || []);
-    setProducts(cfg.products || []);
+    setProducts(p);
+    setCategories(prev => [...new Set([...DEFAULT_CATS, ...prev, ...p.map(pp => pp.category).filter(Boolean)])]);
   }, [event?.id]);
 
   // Event history
@@ -124,13 +139,23 @@ export default function Einstellungen() {
         ))}
       </div>
 
-      <div className="section-title">Produkte</div>
+      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>Produkte</span>
+        <button className="btn btn-ghost" style={{ padding: '3px 10px', fontSize: '11px' }} onClick={addCategory}>
+          + Kategorie
+        </button>
+      </div>
+      <div className="prod-row prod-row-header">
+        <span>Name</span><span>Preis</span><span>Kategorie</span><span />
+      </div>
       <div id="prod-list">
         {products.map((p, i) => (
           <div key={p.id} className="prod-row">
-            <input type="text"   value={p.name}     placeholder="Produktname" onChange={e => setProductField(i, 'name',     e.target.value)} />
-            <input type="number" value={p.price}    placeholder="Preis"       onChange={e => setProductField(i, 'price',    e.target.value)} step="0.10" />
-            <input type="text"   value={p.category} placeholder="Kategorie"   onChange={e => setProductField(i, 'category', e.target.value)} />
+            <input type="text"   value={p.name}  placeholder="Produktname" onChange={e => setProductField(i, 'name',  e.target.value)} />
+            <input type="number" value={p.price} placeholder="0,00"        onChange={e => setProductField(i, 'price', e.target.value)} step="0.10" />
+            <select value={p.category} onChange={e => setProductField(i, 'category', e.target.value)}>
+              {categories.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
             <button className="icon-btn" onClick={() => removeProduct(i)}>✕</button>
           </div>
         ))}
