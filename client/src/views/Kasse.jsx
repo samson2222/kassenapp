@@ -37,8 +37,10 @@ export default function Kasse() {
         {names.map((n, i) => (
           <button key={i} className={`token ${i === activeBedienung ? 'active' : ''}`} onClick={() => setActiveBedienung(i)}>
             <div className="circle">{i + 1}</div>
-            <div className="name">{n}</div>
-            <div className="sub">{fmt(soll(transactions, i))}</div>
+            <div className="token-info">
+              <div className="name">{n}</div>
+              <div className="sub">{fmt(soll(transactions, i))}</div>
+            </div>
           </button>
         ))}
       </div>
