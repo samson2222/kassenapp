@@ -1,13 +1,10 @@
 import { useStore } from '../store';
 import { PRODUCT_COLORS } from './Einstellungen';
 
+
 function fmt(n) {
   return (Math.round(n * 100) / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
 }
-function fmtTime(ts) {
-  return new Date(ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-}
-
 function soll(transactions, bIndex) {
   return transactions.filter(t => t.bedienungIndex === bIndex && !t.voided).reduce((s, t) => s + t.total, 0);
 }
@@ -17,7 +14,7 @@ export default function Kasse() {
     event, transactions, cart,
     activeBedienung, setActiveBedienung,
     activeCategory, setActiveCategory,
-    addToCart, voidTx,
+    addToCart,
   } = useStore();
 
   const cfg = event?.config || {};
@@ -27,12 +24,6 @@ export default function Kasse() {
   const visible = activeCategory === 'Alle'
     ? products
     : products.filter(p => p.type !== 'separator' && p.category === activeCategory);
-  const recent = [...transactions].reverse().slice(0, 10);
-
-  async function handleVoid(id) {
-    if (confirm('Diesen Verkauf stornieren?')) await voidTx(id);
-  }
-
   return (
     <section id="view-kasse">
       {/* Bedienung selector */}
@@ -82,32 +73,6 @@ export default function Kasse() {
         })}
       </div>
 
-      {/* Recent sales */}
-      <div className="section-title">Letzte Verkäufe</div>
-      {recent.length === 0 ? (
-        <div className="empty-hint">Noch keine Verkäufe gebucht.</div>
-      ) : (
-        <section className="card">
-          {recent.map(t => {
-            const bname = names[t.bedienungIndex] || `Bedienung ${t.bedienungIndex + 1}`;
-            const count = t.items.reduce((s, i) => s + i.qty, 0);
-            return (
-              <div key={t.id} className={`recent-item ${t.voided ? 'void' : ''}`}>
-                <div>
-                  <div>{bname}</div>
-                  <div className="rmeta">{fmtTime(t.ts)} · {count} Artikel</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span className="ramount">{fmt(t.total)}</span>
-                  {!t.voided && (
-                    <button className="link-btn" onClick={() => handleVoid(t.id)}>Stornieren</button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </section>
-      )}
     </section>
   );
 }

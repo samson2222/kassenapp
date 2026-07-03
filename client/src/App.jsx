@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useStore } from './store';
 import Kasse, { CartBar } from './views/Kasse';
+import Verlauf from './views/Verlauf';
 import Bedienungen from './views/Bedienungen';
 import Abrechnung from './views/Abrechnung';
 import Einstellungen from './views/Einstellungen';
@@ -9,6 +10,7 @@ import './App.css';
 
 const NAV = [
   { key: 'kasse',         label: 'Kasse' },
+  { key: 'verlauf',       label: 'Verlauf' },
   { key: 'bedienungen',   label: 'Bedienungen' },
   { key: 'abrechnung',    label: 'Abrechnung' },
   { key: 'einstellungen', label: 'Einstellungen' },
@@ -78,6 +80,7 @@ export default function App() {
           ) : (
             <>
               {activeView === 'kasse'         && <Kasse />}
+              {activeView === 'verlauf'       && <Verlauf />}
               {activeView === 'bedienungen'   && <Bedienungen />}
               {activeView === 'abrechnung'    && <Abrechnung />}
               {activeView === 'einstellungen' && <Einstellungen />}

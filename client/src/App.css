@@ -321,6 +321,39 @@ section.card {
   padding: 4px 9px;
   cursor: pointer;
 }
+#view-verlauf { padding-bottom: 90px; }
+.verlauf-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 4px 2px 10px;
+}
+.verlauf-total { font-size: 17px; color: var(--text); font-variant-numeric: tabular-nums; }
+.verlauf-date-divider {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-faint);
+  padding: 12px 18px 4px;
+  background: var(--bg);
+  margin: 0 -1px;
+}
+.void-badge {
+  display: inline-block;
+  margin-left: 6px;
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  vertical-align: middle;
+}
 
 /* ── Bedienungen (readonly) ────────────────────────────────────────────────── */
 .bedienungen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
@@ -694,9 +727,9 @@ nav#bottom-nav button {
   background: none;
   border: none;
   color: var(--text-faint);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 10px 4px 12px;
+  padding: 10px 2px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
