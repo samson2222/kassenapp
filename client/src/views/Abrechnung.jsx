@@ -88,11 +88,11 @@ export default function Abrechnung() {
       tSoll += s;
       if (ist !== null) {
         const netto     = ist - startgeld;
-        const provision = netto * (pct / 100);
+        const provision = s * (pct / 100);  // % vom Soll
         tNetto     += netto;
         tProvision += provision;
         lines.push(
-          `${n}: Soll ${fmt(s)} | Startgeld ${fmt(startgeld)} | Ist ${fmt(ist)} | Netto ${fmt(netto)} | Provision (${pct}%) ${fmt(provision)} | Auszahlung ${fmt(netto - provision)} | Diff ${fmt(netto - s)}`
+          `${n}: Soll ${fmt(s)} | Startgeld ${fmt(startgeld)} | Ist ${fmt(ist)} | Netto ${fmt(netto)} | Provision (${pct}% v. Soll) ${fmt(provision)} | Auszahlung ${fmt(netto - provision)} | Diff ${fmt(netto - s)}`
         );
       } else {
         lines.push(`${n}: Soll ${fmt(s)} | Noch nicht abgerechnet`);
@@ -106,12 +106,13 @@ export default function Abrechnung() {
   // Totals use committed server values
   let totalSoll = 0, totalNetto = 0, totalProvision = 0;
   names.forEach((_, i) => {
-    totalSoll += soll(transactions, i);
-    const s = settlements[i];
-    if (s?.ist != null) {
-      const netto = Number(s.ist) - (s.startgeld != null ? Number(s.startgeld) : 0);
+    const s = soll(transactions, i);
+    totalSoll += s;
+    const settlement = settlements[i];
+    if (settlement?.ist != null) {
+      const netto = Number(settlement.ist) - (settlement.startgeld != null ? Number(settlement.startgeld) : 0);
       totalNetto     += netto;
-      totalProvision += netto * ((provisions[i] ?? 10) / 100);
+      totalProvision += s * ((provisions[i] ?? 10) / 100);  // % vom Soll
     }
   });
   const totalAuszahlung = totalNetto - totalProvision;
@@ -145,7 +146,7 @@ export default function Abrechnung() {
         const s              = soll(transactions, i);
         const netto          = localIst !== null ? localIst - localStartgeld : null;
         const pct            = provisions[i] ?? 10;
-        const provision      = netto !== null ? netto * (pct / 100) : null;
+        const provision      = netto !== null ? s * (pct / 100) : null;  // % vom Soll (App-Umsatz)
         const auszahlung     = provision !== null ? netto - provision : null;
         const diff           = netto !== null ? netto - s : null;
         const diffCls        = diff === null ? '' : Math.abs(diff) < 0.005 ? 'match' : diff < 0 ? 'minus' : 'plus';
